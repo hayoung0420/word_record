@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronunciation Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+        
+    <style>
+        * {
+            font-family: 'Zen Kurenaido', sans-serif;
+        }
+        
+        body {
+            font-family:"Zen Kurenaido", sans-serif;
+            background-color: #b3d9ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        h1 {
+            color: #333;
+            display: inline;
+        }
+        /* Style for the circular "?" button */
+        .help-button {
+            background-color: #d85326;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .help-button a {
+            color: white;
+            text-decoration: none;
+        }
+
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .audio-section {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .audio-section audio {
+            margin: 0 20px;
+        }
+        #homeButton {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #5972ac;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #homeButton a {
+            color: white;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>English Pronunciation Practice</h1>
+    
+    <!-- Circular help button linking to a new HTML page -->
+    <button class="help-button"><a href="index.evualtecrita.html">!!</a></button>
+
+    <p>Click <strong>"Record" </strong>and pronounce the word <strong>"father"</strong>. Your pronunciation will be compared to a native speaker's pronunciation.</p>
+
+    <button id="recordButton">Record</button>
+    <button id="stopButton" disabled>Stop</button>
+    <button id="playButton" disabled>Play</button>
+
+    <!-- 원어민 발음과 사용자 발음이 나란히 위치 -->
+    <div class="audio-section">
+        <div>
+            <h3>Your Recording:</h3>
+            <audio id="audioPlayback" controls></audio>
+        </div>
+        <div>
+            <h3>Native Speaker:</h3>
+            <audio id="nativeAudio" controls>
+                <source src="native_father.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+
+    <!-- 결과 테이블 -->
+    <table id="resultTable">
+        <tr>
+            <th>Phoneme</th>
+            <th>Result</th>
+            <th>Explanation</th>
+        </tr>
+        <!-- 결과가 여기에 추가될 예정 -->
+    </table>
+
+    <div id="result"></div>
+</div>
+
+<!-- Home 버튼 추가 -->
+<button id="homeButton"><a href="index.consonant.html">Home</a></button>
+
+<script>
+    // The existing JavaScript logic for recording, playing back, and analyzing pronunciation remains the same
+    let mediaRecorder;
+    let audioChunks = [];
+    const recordButton = document.getElementById('recordButton');
+    const stopButton = document.getElementById('stopButton');
+    const playButton = document.getElementById('playButton');
+    const audioPlayback = document.getElementById('audioPlayback');
+    const resultTable = document.getElementById('resultTable');
+    
+    const phonemes = ['f', 'ɑː', 'ð', 'ə', 'r']; // "father"의 발음 기호 목록
+    const explanations = {
+        'f': 'The [f] sound is a voiceless labiodental fricative.',
+        'ɑː': 'The [ɑː] sound is a long open back unrounded vowel.',
+        'ð': 'The [ð] sound is a voiced dental fricative.',
+        'ə': 'The [ə] sound is a mid-central vowel (schwa).',
+        'r': 'The [r] sound is a voiced alveolar approximant.'
+    };
+
+    // Access the user's microphone
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayback.src = audioUrl;
+
+                // 임시 발음 정확도 결과 생성 (랜덤)
+                const userPhonemeAccuracies = [true, false, true, true, false]; // 임시 데이터
+
+                analyzePronunciation(userPhonemeAccuracies);
+                audioChunks = [];
+            };
+        });
+
+    recordButton.addEventListener('click', () => {
+        mediaRecorder.start();
+        recordButton.disabled = true;
+        stopButton.disabled = false;
+    });
+
+    stopButton.addEventListener('click', () => {
+        mediaRecorder.stop();
+        recordButton.disabled = false;
+        stopButton.disabled = true;
+        playButton.disabled = false;
+    });
+
+    playButton.addEventListener('click', () => {
+        audioPlayback.play();
+    });
+
+    function analyzePronunciation(userPhonemeAccuracies) {
+        phonemes.forEach((phoneme, index) => {
+            const row = resultTable.insertRow();
+            const phonemeCell = row.insertCell(0);
+            const resultCell = row.insertCell(1);
+            const explanationCell = row.insertCell(2);
+
+            phonemeCell.innerHTML = phoneme;
+            resultCell.innerHTML = userPhonemeAccuracies[index] ? 'Good' : 'Not Good';
+            explanationCell.innerHTML = userPhonemeAccuracies[index] ? '' : explanations[phoneme];
+        });
+    }
+</script>
+
+</body>
+</html>
